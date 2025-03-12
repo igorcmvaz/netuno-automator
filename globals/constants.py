@@ -5,6 +5,7 @@ RAINFALL_SUBSTITUTION_PERCENT_MAX = 100
 
 NETUNO_STARTUP_WAIT_TIME = 1
 PAUSE = 0.8
+PATH_TO_LOWER_TANK_RADIO_BUTTON = r"static\netuno_lower_tank_known_volume.png"
 
 INITIAL_DATES = {
     "Histórico": "1980-01-01",
