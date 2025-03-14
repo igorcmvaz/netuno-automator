@@ -16,19 +16,24 @@ from globals.errors import (
 logger = logging.getLogger("triton")
 
 
-def run_netuno(path_to_netuno: Path) -> subprocess.Popen:
+def run_netuno(
+        path_to_netuno: Path,
+        wait_after_start: int = NETUNO_STARTUP_WAIT_TIME) -> subprocess.Popen:
     """
     Executes the Netuno application in a new process, returning the corresponding Popen
     object.
 
     Args:
         path_to_netuno (Path): Path to the Netuno executable file.
+        wait_after_start (int): Time, in seconds, to wait after initializing Netuno before
+        returning. Defaults to `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
 
     Returns:
         subprocess.Popen: New Popen instance corresponding to the process executing Netuno.
     """
     new_process = subprocess.Popen(args=(path_to_netuno,))
     logger.debug(f"Successfully spawned new process #{new_process.pid} with Netuno 4")
+    time.sleep(wait_after_start)
     return new_process
 
 
