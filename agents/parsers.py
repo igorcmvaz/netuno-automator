@@ -32,7 +32,7 @@ class FileNameParser:
         Returns:
             tuple[str, str, str]: Tuple containing city name, climate model and scenario.
         """
-        city, model, scenario = file_name.stem.split("_")
+        city, model, scenario = file_name.stem.split(".", 1)[0].split("_")
         if (match := re.search(r"\(.*\)", city)):
             city = city.replace(match.group(), "")
         return city, model, scenario

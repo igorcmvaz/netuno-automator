@@ -70,16 +70,18 @@ class Mover:
     def from_date_to_simulate_button():
         pyautogui.press("tab", 15)
 
+    @staticmethod
+    def from_export_to_file_selection():
+        pyautogui.press("tab", 5)
+        pyautogui.press("up", 3)
+
 
 class NetunoAutomator:
 
     pause: float = 0.8
 
-    def __init__(self, precipitation_dir: Path):
-        self.precipitation_dir = precipitation_dir
-
     def _select_file_in_explorer(self, file_path: Path):
-        pyperclip.copy(file_path)
+        pyperclip.copy(file_path.resolve())
         logger.info(f"Got path: {file_path.resolve()}")
         time.sleep(self.pause)
         pyautogui.hotkey("ctrl", "v")
@@ -114,7 +116,7 @@ class NetunoAutomator:
         pyautogui.press("down", value // 10)
 
     def _set_export_file_path(self, original_file_path: Path) -> Path:
-        export_path = Path(original_file_path).with_suffix(".out.csv")
+        export_path = Path(original_file_path.stem.split(".", 1)[0]).with_suffix(".out.csv")
         self._select_file_in_explorer(export_path)
         return export_path
 
@@ -177,10 +179,13 @@ class NetunoAutomator:
             inferior_tank_capacity)
         Mover.from_lower_tank_field_to_simulate_button()
         self._simulate_and_start_export()
-        return self._set_export_file_path(precipitation_path)
+        exported_path = self._set_export_file_path(precipitation_path)
+        return exported_path
 
     def run_simulation(self, precipitation_path: Path, date: str) -> Path:
+        Mover.from_export_to_file_selection()
         self._setup_precipitation_file(precipitation_path, date)
         Mover.from_date_to_simulate_button()
         self._simulate_and_start_export()
-        return self._set_export_file_path(precipitation_path)
+        exported_path = self._set_export_file_path(precipitation_path)
+        return exported_path

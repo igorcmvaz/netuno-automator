@@ -17,7 +17,7 @@ SIMULATION_PARAMETERS = {
     "initial_run_off_disposal": 2,
     "catchment_area": 50,
     "daily_water_demand": 603,
-    "residents": 1,
+    "number_of_residents": 1,
     "rainwater_replacement_percentage": 40,
     "coefficient_of_loss": 0.8,
     "inferior_tank_capacity": 150
