@@ -3,7 +3,8 @@ from pathlib import Path
 
 from agents.validators import CommandLineArgsValidator
 from globals.errors import (
-    InvalidNetunoExecutableError, InvalidSourceDirectoryError, MissingInputDataError)
+    InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
+    InvalidSourceDirectoryError, MissingInputDataError)
 
 
 class TestCommandLineArgsValidator(unittest.TestCase):
@@ -41,6 +42,9 @@ class TestCommandLineArgsValidator(unittest.TestCase):
         self.PRECIPITATION_PATH.rmdir()
 
     def test_validate_precipitation_path_not_a_dir(self):
+        self.CSV_PATH.unlink(missing_ok=True)
+        if self.PRECIPITATION_PATH.is_dir():
+            self.PRECIPITATION_PATH.rmdir()
         with self.assertRaises(InvalidSourceDirectoryError):
             self.validator._validate_precipitation_path()
 
@@ -55,10 +59,22 @@ class TestCommandLineArgsValidator(unittest.TestCase):
         alternate_file.unlink()
         self.PRECIPITATION_PATH.rmdir()
 
+    def test_validate_save_every_n_success(self):
+        self.validator.save_every = 5
+
+        self.assertIsNone(self.validator._validate_save_every_n())
+
+    def test_validate_save_every_n_failure(self):
+        self.validator.save_every = 0
+
+        with self.assertRaises(InvalidPartialSaveAttributeError):
+            self.validator._validate_save_every_n()
+
     def test_validate_arguments(self):
         self.PRECIPITATION_PATH.mkdir(exist_ok=True)
         self.NETUNO_PATH.touch(exist_ok=True)
         self.CSV_PATH.touch(exist_ok=True)
+        self.validator.save_every = 5
 
         self.assertIsNone(self.validator.validate_arguments())
 
