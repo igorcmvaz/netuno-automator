@@ -1,5 +1,4 @@
 import logging
-import time
 from pathlib import Path
 
 import pyautogui
@@ -11,6 +10,7 @@ from globals.constants import (
     RAINFALL_SUBSTITUTION_PERCENT_MIN)
 
 logger = logging.getLogger("triton")
+pyautogui.PAUSE = 0.08
 
 
 def saturate(value: float, lower_limit: float, upper_limit: float) -> float:
@@ -21,9 +21,7 @@ class Mover:
 
     @staticmethod
     def from_startup_to_file_selection():
-        pyautogui.press("down", 2)
-        time.sleep(PAUSE)
-        pyautogui.press("up")
+        pyautogui.press(["down", "down", "up"])
 
     @staticmethod
     def from_file_selection_to_date():
@@ -82,10 +80,8 @@ class NetunoAutomator:
 
     def _select_file_in_explorer(self, file_path: Path):
         pyperclip.copy(file_path.resolve())
-        logger.info(f"Got path: {file_path.resolve()}")
-        time.sleep(self.pause)
+        logger.debug(f"Selecting file at '{file_path.resolve()}'")
         pyautogui.hotkey("ctrl", "v")
-        time.sleep(self.pause)
         pyautogui.press("enter")
 
     def _type_date(self, date: str):
@@ -158,7 +154,6 @@ class NetunoAutomator:
         pyautogui.press("space")
         Mover.from_simulate_to_export_button()
         pyautogui.press("space")
-        time.sleep(self.pause)
 
     def run_first_simulation(
             self,
