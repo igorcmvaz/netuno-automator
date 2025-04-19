@@ -17,3 +17,9 @@ class MissingInputDataError(Exception):
     def __init__(self, source_directory: Path, *args):
         message = f"Provided path '{source_directory.resolve()}' has no CSV files"
         super().__init__(message, *args)
+
+
+class InvalidPartialSaveAttributeError(Exception):
+    def __init__(self, save_every: int, *args):
+        message = f"Provided value {save_every} is not greater than 0"
+        super().__init__(message, *args)
