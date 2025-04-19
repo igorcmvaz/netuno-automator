@@ -3,6 +3,7 @@ import subprocess
 import time
 from argparse import ArgumentParser
 from pathlib import Path
+from collections.abc import Callable
 
 from agents.automators import NetunoAutomator
 from agents.exporter import Exporter
@@ -67,6 +68,18 @@ def setup_logger(
     handler.setLevel(log_level)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+def sleep_until(function: Callable, tick: float = 0.01) -> None:
+    """
+    Sleep until a function returns True, checking it at fixed intervals.
+
+    Args:
+        function (Callable): Function to evaluate at every interval.
+        tick (float, optional): Interval between checks, in seconds. Defaults to 0.01.
+    """
+    while not function():
+        time.sleep(tick)
 
 
 def main(args: CommandLineArgsValidator):
