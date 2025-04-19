@@ -75,3 +75,29 @@ class ResultParser:
             "period_when_demand_is_not_met": Variable(
                 label=results[6]["label"], unit="%", value=results[6]["value"]),
         }
+
+    def to_list(self, city: str, model: str, scenario: str,) -> list[ResultTuple]:
+        """
+        Converts the results from `parse_results()` into a list of tuples, each one
+        containing a single metric and the corresponding city, model and scenario.
+
+        Args:
+            city (str): City corresponding to the results.
+            model (str): Model corresponding to the results.
+            scenario (str): Scenario corresponding to the results.
+
+        Returns:
+            list[ResultTuple]: List of tuples, each one with one metric and identified by
+            name of the city, model and scenario.
+        """
+        content = []
+        for metric, variable in self.parse_results().items():
+            content.append((
+                city,
+                model,
+                scenario,
+                metric,
+                variable.label,
+                variable.value,
+                variable.unit))
+        return content
