@@ -7,10 +7,18 @@ RAINFALL_SUBSTITUTION_PERCENT_MIN = 10
 RAINFALL_SUBSTITUTION_PERCENT_MAX = 100
 
 NETUNO_STARTUP_WAIT_TIME = 1
-PAUSE = 0.8
 PATH_TO_LOWER_TANK_RADIO_BUTTON = r"static\netuno_lower_tank_known_volume.png"
 
 NETUNO_RESULTS_PATH = Path().parent / "results"
+
+OUTPUT_COLUMNS = (
+    "city",
+    "model",
+    "scenario",
+    "metric",
+    "label",
+    "value",
+    "unit")
 
 INITIAL_DATES = {
     "Histórico": "01/01/1980",
