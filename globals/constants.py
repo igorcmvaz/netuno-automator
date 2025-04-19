@@ -8,9 +8,9 @@ PAUSE = 0.8
 PATH_TO_LOWER_TANK_RADIO_BUTTON = r"static\netuno_lower_tank_known_volume.png"
 
 INITIAL_DATES = {
-    "Histórico": "1980-01-01",
-    "SSP245": "2015-01-01",
-    "SSP585": "2015-01-01"
+    "Histórico": "01/01/1980",
+    "SSP245": "01/01/2015",
+    "SSP585": "01/01/2015"
 }
 
 SIMULATION_PARAMETERS = {
