@@ -100,10 +100,23 @@ class TestFileNameParser(unittest.TestCase):
         self.assertTupleEqual(result, ("São Paulo", "ACCESS-CM2", "Histórico"))
 
 
-class TestSimulationResultsParser(unittest.TestCase):
+class TestResultsParser(unittest.TestCase):
 
     def setUp(self):
         self.parser = ResultParser(PATH_TO_SIMULATION_RESULT)
+
+    def test_float_from_string(self):
+        TEST_SAMPLES = [
+            ("3,14", 3.14),
+            ("0,14", 0.14),
+            ("3,00", 3),
+            ("10.553,14", 10553.14),
+            ("10.553", 10.553),
+            ("0.14", 0.14),
+            ]
+        for value, expected_value in TEST_SAMPLES:
+            with self.subTest(value=value):
+                self.assertEqual(self.parser._float_from_string(value), expected_value)
 
     def test_get_results_from_sample(self):
         actual_results = self.parser._get_results()
@@ -114,6 +127,31 @@ class TestSimulationResultsParser(unittest.TestCase):
         actual_results = self.parser.parse_results()
 
         self.assertDictEqual(actual_results, SAMPLE_RESULTS)
+
+    def test_results_to_list(self):
+        actual_results = self.parser.to_list("Florianópolis", "ACCESS-CM2", "Histórico")
+        EXPECTED_RESULT = [
+            ("Florianópolis", "ACCESS-CM2", "Histórico",
+                "potential_savings", "Potencial de economia (%)", 9.2, "%"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico", "average_rainwater_consumption",
+             "Volume consumido médio de água pluvial (litros/dia)", 55.4734, "liters/day"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico",
+             "average_drinking_water_consumption",
+             "Volume consumido médio de água potável (litros/dia)", 547.527, "liters/day"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico", "average_rainwater_overflow",
+             "Volume médio de água pluvial extravasado (litros/dia)", 136.911,
+             "liters/day"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico", "period_when_demand_is_fully_met",
+             "Dias em que a demanda de água pluvial é atendida completamente", 0, "days"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico",
+             "period_when_demand_is_partially_met",
+             "Dias em que a demanda de água pluvial é atendida parcialmente (%)", 39.04,
+             "%"),
+            ("Florianópolis", "ACCESS-CM2", "Histórico", "period_when_demand_is_not_met",
+             "Dias em que a demanda de água pluvial não é atendida (%)", 60.96, "%")
+        ]
+
+        self.assertListEqual(actual_results, EXPECTED_RESULT)
 
 
 if __name__ == '__main__':
