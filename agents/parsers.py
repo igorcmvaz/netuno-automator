@@ -46,7 +46,8 @@ class ResultParser:
     def _float_from_string(self, value: str) -> float:
         """
         Converts a string value to a float, considering it might contain dots as thousands
-        separators and commas as a decimal separator.
+        separators and commas as a decimal separator. If no commas are present, simple type
+        casting is done.
 
         Args:
             value (str): Value to be converted.
@@ -54,7 +55,9 @@ class ResultParser:
         Returns:
             float: Float value obtained from the conversion.
         """
-        return float(value.replace(".", "").replace(",", "."))
+        if "," in value:
+            value = value.replace(".", "").replace(",", ".")
+        return float(value)
 
     def _get_results(self) -> list[dict[str, str | float]]:
         """
