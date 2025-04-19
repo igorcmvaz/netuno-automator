@@ -6,8 +6,8 @@ import pyautogui
 import pyperclip
 
 from globals.constants import (
-    PAUSE, PATH_TO_LOWER_TANK_RADIO_BUTTON, COEFFICIENT_OF_LOSS_MAX,
-    COEFFICIENT_OF_LOSS_MIN, RAINFALL_SUBSTITUTION_PERCENT_MAX,
+    COEFFICIENT_OF_LOSS_MAX, COEFFICIENT_OF_LOSS_MIN, NETUNO_RESULTS_PATH,
+    PATH_TO_LOWER_TANK_RADIO_BUTTON, RAINFALL_SUBSTITUTION_PERCENT_MAX,
     RAINFALL_SUBSTITUTION_PERCENT_MIN)
 
 logger = logging.getLogger("triton")
@@ -116,7 +116,10 @@ class NetunoAutomator:
         pyautogui.press("down", value // 10)
 
     def _set_export_file_path(self, original_file_path: Path) -> Path:
-        export_path = Path(original_file_path.stem.split(".", 1)[0]).with_suffix(".out.csv")
+        export_path = Path(
+            NETUNO_RESULTS_PATH,
+            original_file_path.stem.split(".", 1)[0]
+            ).with_suffix(".out.csv")
         self._select_file_in_explorer(export_path)
         return export_path
 
