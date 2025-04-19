@@ -43,6 +43,19 @@ class ResultParser:
     def __init__(self, results_file: Path):
         self.results_file = results_file
 
+    def _float_from_string(self, value: str) -> float:
+        """
+        Converts a string value to a float, considering it might contain dots as thousands
+        separators and commas as a decimal separator.
+
+        Args:
+            value (str): Value to be converted.
+
+        Returns:
+            float: Float value obtained from the conversion.
+        """
+        return float(value.replace(".", "").replace(",", "."))
+
     def _get_results(self) -> list[dict[str, str | float]]:
         results = []
         with open(
@@ -51,10 +64,16 @@ class ResultParser:
                 encoding=SIMULATION_OUTPUT_ATTRIBUTES["encoding"]) as csv_file:
             reader = csv.reader(
                 csv_file, delimiter=SIMULATION_OUTPUT_ATTRIBUTES["delimiter"])
+            results_section = False
             for index, row in enumerate(reader):
-                if index < SIMULATION_OUTPUT_ATTRIBUTES["skip_n_rows"]:
+                if SIMULATION_OUTPUT_ATTRIBUTES["start_of_results_label"] in row:
+                    results_section = True
                     continue
-                results.append({"label": row[0], "value": float(row[1])})
+                if results_section:
+                    results.append({
+                        "label": row[0],
+                        "value": self._float_from_string(row[1])
+                    })
         return results
 
     def parse_results(self) -> dict[str, Variable]:

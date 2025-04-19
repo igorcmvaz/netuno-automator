@@ -26,5 +26,5 @@ SIMULATION_PARAMETERS = {
 SIMULATION_OUTPUT_ATTRIBUTES = {
     "encoding": "WINDOWS-1252",
     "delimiter": ";",
-    "skip_n_rows": 22
+    "start_of_results_label": "RESULTADO DA SIMULAÇÃO"
 }
