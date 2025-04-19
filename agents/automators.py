@@ -84,27 +84,36 @@ class NetunoAutomator:
         pyautogui.hotkey("ctrl", "v")
         pyautogui.press("enter")
 
-    def _type_date(self, date: str):
+    def _type_float_value(self, value: float) -> None:
+        """
+        Types a value into the focused field, replacing any dots with commas.
+
+        Args:
+            value (float): Value to be typed.
+        """
+        pyautogui.write(str(value).replace(".", ","))
+
+    def _type_date(self, date: str) -> None:
         pyautogui.write(date)
 
-    def _type_initial_run_off(self, initial_run_off: float):
-        pyautogui.write(str(initial_run_off).replace(".", ","))
+    def _type_initial_run_off(self, initial_run_off: float) -> None:
+        self._type_float_value(initial_run_off)
 
-    def _type_catchment_area(self, catchment_area: float):
-        pyautogui.write(str(catchment_area).replace(".", ","))
+    def _type_catchment_area(self, catchment_area: float) -> None:
+        self._type_float_value(catchment_area)
 
-    def _type_lower_tank_capacity(self, capacity: float):
-        pyautogui.write(str(capacity).replace(".", ","))
+    def _type_lower_tank_capacity(self, capacity: float) -> None:
+        self._type_float_value(capacity)
 
-    def _type_water_demand(self, water_demand: float):
-        pyautogui.write(str(water_demand).replace(".", ","))
+    def _type_water_demand(self, water_demand: float) -> None:
+        self._type_float_value(water_demand)
 
-    def _type_number_of_residents(self, amount: int):
+    def _type_number_of_residents(self, amount: int) -> None:
         pyautogui.write(str(amount))
 
-    def _select_coefficient_of_loss(self, value: float):
+    def _select_coefficient_of_loss(self, value: float) -> None:
         value = saturate(value, COEFFICIENT_OF_LOSS_MIN, COEFFICIENT_OF_LOSS_MAX)
-        pyautogui.write(str(value).replace(".", ","))
+        self._type_float_value(value)
 
     def _select_rainwater_replacement_option(self, value: int):
         value = saturate(
