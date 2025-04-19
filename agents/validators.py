@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from globals.errors import (
-    InvalidNetunoExecutableError, InvalidSourceDirectoryError, MissingInputDataError)
+    InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
+    InvalidSourceDirectoryError, MissingInputDataError)
 
 
 class CommandLineArgsValidator:
@@ -9,6 +10,8 @@ class CommandLineArgsValidator:
     precipitation_dir_path: Path
     quiet: int
     verbose: bool
+    clean: bool
+    save_every: int
 
     def _validate_netuno_path(self) -> None:
         """
@@ -36,7 +39,18 @@ class CommandLineArgsValidator:
                 if ".csv" == file.suffix.casefold()):
             raise MissingInputDataError(self.precipitation_dir_path)
 
+    def _validate_save_every_n(self) -> None:
+        """
+        Validates the value of the partial save attribute, which should be greater than 0.
+
+        Raises:
+            InvalidPartialSaveAttributeError: If the given value is less than or equal to 0.
+        """
+        if self.save_every <= 0:
+            raise InvalidPartialSaveAttributeError(self.save_every)
+
     def validate_arguments(self) -> None:
         """Executes all validation methods from the class."""
         self._validate_netuno_path()
         self._validate_precipitation_path()
+        self._validate_save_every_n()
