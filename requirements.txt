@@ -7,3 +7,4 @@ pyperclip==1.9.0
 PyScreeze==1.0.1
 pytest-cov==6.0.0
 pytest==8.3.4
+time-machine==2.8.0
