@@ -78,7 +78,7 @@ In order to execute such operation, the application requires a source of CSV pre
 
 ```bash
 # show help message and details about the parameters
-python triton.py path/to/netuno.exe path/to/precipitation -h
+python triton.py -h
 # run with default parameters           
 python triton.py path/to/netuno.exe path/to/precipitation
 
