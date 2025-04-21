@@ -20,4 +20,5 @@ python-dateutil==2.9.0.post0
 pytweening==1.2.0
 pytz==2025.2
 six==1.17.0
+time-machine==2.8.0
 tzdata==2025.2
