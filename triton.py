@@ -155,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-n", "--save-every", type=int, default=10, dest="save_every",
         help="number of files to process before saving the in-memory results to a file. "
-        "Must be a positive integer")
+        "Must be a positive integer. Defaults to 10.")
 
     validator = CommandLineArgsValidator()
     parser.parse_args(namespace=validator)
