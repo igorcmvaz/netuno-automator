@@ -88,7 +88,7 @@ class ResultParser:
             reader = csv.reader(
                 csv_file, delimiter=SIMULATION_OUTPUT_ATTRIBUTES["delimiter"])
             results_section = False
-            for index, row in enumerate(reader):
+            for row in reader:
                 if SIMULATION_OUTPUT_ATTRIBUTES["start_of_results_label"] in row:
                     results_section = True
                     continue
