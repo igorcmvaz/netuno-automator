@@ -23,3 +23,9 @@ class InvalidPartialSaveAttributeError(Exception):
     def __init__(self, save_every: int, *args):
         message = f"Provided value {save_every} is not greater than 0"
         super().__init__(message, *args)
+
+
+class CustomTimeoutError(Exception):
+    def __init__(self, timeout: int, *args):
+        message = f"Timeout of {timeout} seconds reached"
+        super().__init__(message, *args)
