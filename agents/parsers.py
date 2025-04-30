@@ -2,11 +2,37 @@ import csv
 import logging
 import re
 from pathlib import Path
+import time
 
 from globals.constants import SIMULATION_OUTPUT_ATTRIBUTES
+from globals.errors import CustomTimeoutError
 from globals.types import ResultTuple, Variable
 
 logger = logging.getLogger("triton")
+
+
+def sleep_until_file_is_available(
+        file_path: Path, tick: float = 0.01, timeout: float = 0.5) -> None:
+    """
+    Sleeps until the specified file no longer raises errors when opened, with a timeout.
+
+    Args:
+        file_path (Path): Path to the file to be checked.
+        tick (float, optional): Time, in seconds, to wait between checks. Defaults to 0.01.
+        timeout (float, optional): Timeout after which an exception is thrown, in seconds.
+            Defaults to 0.5.
+    """
+    start_time = time.perf_counter()
+    while True:
+        if (time.perf_counter() - start_time) >= timeout:
+            raise CustomTimeoutError(timeout)
+        try:
+            file = open(file_path)
+        except (IOError, PermissionError):
+            time.sleep(tick)
+        else:
+            file.close()
+            break
 
 
 class FileNameParser:
@@ -81,6 +107,7 @@ class ResultParser:
             for all results found in the file.
         """
         results = []
+        sleep_until_file_is_available(self.results_file)
         with open(
                 self.results_file,
                 newline="",
