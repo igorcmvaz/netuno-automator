@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 
 import pyautogui
@@ -105,7 +106,10 @@ class NetunoAutomator:
         """
         pyperclip.copy(file_path.resolve())
         logger.debug(f"Selecting file at '{file_path.resolve()}'")
-        pyautogui.hotkey("ctrl", "v")
+        time.sleep(0.2)
+        pyautogui.keyDown("ctrl")
+        pyautogui.press("v")
+        pyautogui.keyUp("ctrl")
         pyautogui.press("enter")
 
     def _type_float_value(self, value: float) -> None:
