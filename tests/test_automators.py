@@ -11,6 +11,8 @@ MOCK_PATHS = {
     "press": "pyautogui.press",
     "move_to": "pyautogui.moveTo",
     "hotkey": "pyautogui.hotkey",
+    "key_down": "pyautogui.keyDown",
+    "key_up": "pyautogui.keyUp",
     "write": "pyautogui.write",
     "left_click": "pyautogui.leftClick",
     "locate_center": "pyautogui.locateCenterOnScreen",
@@ -20,6 +22,7 @@ MOCK_PATHS = {
     "setup_precipitation": "agents.automators.NetunoAutomator._setup_precipitation_file",
     "set_simulation": "agents.automators.NetunoAutomator._set_simulation_parameters",
     "simulate_export": "agents.automators.NetunoAutomator._simulate_and_start_export",
+    "sleep": "time.sleep",
 }
 
 
@@ -117,10 +120,14 @@ class TestNetunoAutomator(unittest.TestCase):
         path = Path()
         with (
                 patch(MOCK_PATHS["press"]) as press_mock,
-                patch(MOCK_PATHS["hotkey"]) as hotkey_mock):
+                patch(MOCK_PATHS["key_down"]) as keydown_mock,
+                patch(MOCK_PATHS["key_up"]) as keyup_mock,
+                patch(MOCK_PATHS["sleep"]) as sleep_mock):
             self.automator._select_file_in_explorer(path)
-            hotkey_mock.assert_called_once_with("ctrl", "v")
-            press_mock.assert_called_once_with("enter")
+            keydown_mock.assert_called_once_with("ctrl")
+            keyup_mock.assert_called_once_with("ctrl")
+            sleep_mock.assert_called_once()
+            press_mock.assert_has_calls([call("v"), call("enter")])
         self.assertEqual(Path(pyperclip.paste()), path.resolve())
 
     def test_type_float_value(self):
@@ -162,9 +169,14 @@ class TestNetunoAutomator(unittest.TestCase):
         with (
                 patch(MOCK_PATHS["press"]) as press_mock,
                 patch(MOCK_PATHS["write"]) as write_mock,
-                patch(MOCK_PATHS["hotkey"])):
+                patch(MOCK_PATHS["key_down"]),
+                patch(MOCK_PATHS["key_up"])):
             self.automator._setup_precipitation_file(path, REFERENCE_DATE)
-            press_mock.assert_has_calls([call(["down", "down", "up"]), call("enter")])
+            press_mock.assert_has_calls([
+                call(["down", "down", "up"]),
+                call("v"),
+                call("enter"),
+                call("down", 2)])
             write_mock.assert_called_once_with(REFERENCE_DATE)
         self.assertEqual(Path(pyperclip.paste()), path.resolve())
 

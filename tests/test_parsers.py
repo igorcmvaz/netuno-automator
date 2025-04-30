@@ -1,7 +1,9 @@
 import unittest
 from pathlib import Path
+from unittest.mock import mock_open, patch
 
-from agents.parsers import FileNameParser, ResultParser
+from agents.parsers import FileNameParser, ResultParser, sleep_until_file_is_available
+from globals.errors import CustomTimeoutError
 from globals.types import Variable
 
 PATH_TO_SIMULATION_RESULT = Path(Path(__file__).parent, "samples", "simulation_result.csv")
@@ -65,6 +67,39 @@ SAMPLE_RESULTS = {
         unit="%",
         value=60.96),
 }
+MOCK_STRINGS = {
+    "open": "builtins.open",
+    "sleep": "time.sleep",
+}
+
+
+class TestHelperFunctions(unittest.TestCase):
+
+    def test_sleep_until_file_is_available_IOError(self):
+        with (
+                patch(MOCK_STRINGS["open"], mock_open(read_data="")) as mock_open_file,
+                patch(MOCK_STRINGS["sleep"]) as mock_sleep,
+                self.assertRaises(CustomTimeoutError)):
+            mock_open_file.side_effect = IOError
+            sleep_until_file_is_available(PATH_TO_SIMULATION_RESULT, timeout=0.02)
+            mock_sleep.assert_called_with(0.01)
+
+    def test_sleep_until_file_is_available_PermissionError(self):
+        with (
+                patch(MOCK_STRINGS["open"], mock_open(read_data="")) as mock_open_file,
+                patch(MOCK_STRINGS["sleep"]) as mock_sleep,
+                self.assertRaises(CustomTimeoutError)):
+            mock_open_file.side_effect = PermissionError
+            sleep_until_file_is_available(PATH_TO_SIMULATION_RESULT, timeout=0.02)
+            mock_sleep.assert_called_with(0.01)
+
+    def test_sleep_until_file_is_available_no_errors(self):
+        with (
+                patch(MOCK_STRINGS["open"], mock_open(read_data="")) as mock_open_file,
+                patch(MOCK_STRINGS["sleep"]) as mock_sleep):
+            sleep_until_file_is_available(PATH_TO_SIMULATION_RESULT)
+            mock_open_file.assert_called_once_with(PATH_TO_SIMULATION_RESULT)
+            mock_sleep.assert_not_called()
 
 
 class TestFileNameParser(unittest.TestCase):
@@ -98,6 +133,16 @@ class TestFileNameParser(unittest.TestCase):
         FILE_NAME = Path(__file__).parent / "São Paulo_ACCESS-CM2_Histórico.csv"
         result = FileNameParser.get_metadata(FILE_NAME)
         self.assertTupleEqual(result, ("São Paulo", "ACCESS-CM2", "Histórico"))
+
+    def test_get_metadata_model_with_underscore(self):
+        FILE_NAME = Path(__file__).parent / "Curitiba_ACCESS_CM2_Histórico.csv"
+        result = FileNameParser.get_metadata(FILE_NAME)
+        self.assertTupleEqual(result, ("Curitiba", "ACCESS-CM2", "Histórico"))
+
+    def test_get_metadata_model_with_many_underscores(self):
+        FILE_NAME = Path(__file__).parent / "(Netuno)Curitiba_AC_CE_SS_CM2_Histórico.csv"
+        result = FileNameParser.get_metadata(FILE_NAME)
+        self.assertTupleEqual(result, ("Curitiba", "AC-CE-SS-CM2", "Histórico"))
 
 
 class TestResultsParser(unittest.TestCase):

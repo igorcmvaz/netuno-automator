@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from agents.validators import CommandLineArgsValidator
-from globals.constants import NETUNO_RESULTS_PATH
+from globals.errors import CustomTimeoutError
 from tests.test_parsers import PATH_TO_SIMULATION_RESULT
 from triton import logger, main, run_netuno, setup_logger, sleep_until
 
@@ -15,7 +15,7 @@ MOCK_STRINGS = {
     "run_simulation": "agents.automators.NetunoAutomator.run_simulation",
     "sleep_until": "triton.sleep_until",
     "base_file_name": "agents.exporter.CSVExporter._get_base_file_name",
-    "rmtree": "shutil.rmtree",
+    "path_unlink": "pathlib.Path.unlink",
 }
 
 
@@ -74,7 +74,7 @@ class TestHelperFunctions(unittest.TestCase):
             test_logger.critical("Test CRITICAL")
             self.assertIn("Test CRITICAL", log_context.output[0])
 
-    def test_sleep_until(self):
+    def test_sleep_until_success(self):
         mock_function = MagicMock(side_effect=[False, False, True])
 
         with patch(MOCK_STRINGS["sleep"]) as mock_sleep:
@@ -82,6 +82,14 @@ class TestHelperFunctions(unittest.TestCase):
             mock_sleep.assert_called_with(0.01)
 
         self.assertEqual(mock_function.call_count, 3)
+
+    def test_sleep_until_timeout(self):
+        mock_function = MagicMock(return_value=False)
+
+        with patch(MOCK_STRINGS["sleep"]) as mock_sleep:
+            with self.assertRaises(CustomTimeoutError):
+                sleep_until(mock_function, timeout=0.02)
+                mock_sleep.assert_called_with(0.01)
 
 
 class TestMainFunction(unittest.TestCase):
@@ -101,16 +109,15 @@ class TestMainFunction(unittest.TestCase):
                 patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
                 patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
                 patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
-                patch(MOCK_STRINGS["rmtree"]) as mock_rmtree,
+                patch(MOCK_STRINGS["path_unlink"]) as mock_unlink,
                 patch(MOCK_STRINGS["sleep_until"])):
             mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
             mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
             mock_base_file_name.return_value = SAMPLE_FILE_NAME
             main(args)
             mock_first_simulation.assert_called_once()
+            mock_unlink.assert_called()
             self.assertEqual(mock_run_simulation.call_count, 4)
-            mock_rmtree.assert_called_once_with(NETUNO_RESULTS_PATH)
-        NETUNO_RESULTS_PATH.rmdir()
         SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
 
 
