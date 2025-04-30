@@ -1,9 +1,12 @@
 import csv
+import logging
 import re
 from pathlib import Path
 
 from globals.constants import SIMULATION_OUTPUT_ATTRIBUTES
 from globals.types import ResultTuple, Variable
+
+logger = logging.getLogger("triton")
 
 
 class FileNameParser:
@@ -17,7 +20,9 @@ class FileNameParser:
         `(optional_anything){city_name}_{model}_{scenario}.{extension}`
 
         NOTE: The underscore is used to separate fields, meaning it is expected to be
-        present only at the limits between fields.
+        present only at the limits between fields. The exception is the model name, which
+        may contain underscores. In this case, the model name is parsed using up all extra
+        underscores, which are replaced by hyphens for the final model name.
 
         Examples:
             * `(Netuno)Florianópolis_ACCESS-CM2_Histórico.csv`
@@ -25,6 +30,7 @@ class FileNameParser:
             * `(Netuno)Rio de Janeiro_MIROC6_SSP585.csv`
             * `Belo Horizonte_TaiESM1_Histórico.csv`
             * `Brasília_GFDL-CM4_SSP245.csv`
+            * `Vitória_INM-CM4_8_SSP245.csv`
 
         Args:
             file_name (Path): Path to the file whose name should be parsed.
@@ -32,7 +38,14 @@ class FileNameParser:
         Returns:
             tuple[str, str, str]: Tuple containing city name, climate model and scenario.
         """
-        city, model, scenario = file_name.stem.split(".", 1)[0].split("_")
+        try:
+            city, model, scenario = file_name.stem.split(".", 1)[0].split("_")
+        except ValueError:
+            logger.exception(
+                f"File name '{file_name.name}' has different format than expected, "
+                f"attempting to parse model containing '_' characters")
+            city, *model, scenario = file_name.stem.split(".", 1)[0].split("_")
+            model = "-".join(model)
         if (match := re.search(r"\(.*\)", city)):
             city = city.replace(match.group(), "")
         return city, model, scenario
