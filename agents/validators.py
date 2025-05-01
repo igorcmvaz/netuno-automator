@@ -7,6 +7,7 @@ from globals.errors import (
 
 
 class CommandLineArgsValidator:
+
     netuno_exe_path: Path
     precipitation_dir_path: Path
     quiet: int

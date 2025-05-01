@@ -11,6 +11,10 @@ logger = logging.getLogger("triton")
 
 
 class CSVExporter:
+
+    output_path: Path
+    content: list[ResultTuple]
+
     def __init__(self, parent_output_dir: Path):
         self.output_path = Path(parent_output_dir, self._get_base_file_name())
         self.content = []

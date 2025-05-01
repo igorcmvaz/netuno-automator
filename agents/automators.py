@@ -96,6 +96,8 @@ class NetunoAutomator:
     the `Mover` class and key presses.
     """
 
+    wait: float
+
     def __init__(self, extra_wait: float) -> None:
         self.wait = extra_wait / 10
 
