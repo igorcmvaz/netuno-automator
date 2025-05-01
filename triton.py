@@ -107,7 +107,7 @@ def restart_netuno(
     """
     logger.info(f"Terminating Netuno process #{processes.get("netuno").pid}")
     processes.get("netuno").terminate()
-    processes["netuno"] = run_netuno(processes.get("netuno").args, wait_after_start)
+    processes["netuno"] = run_netuno(processes.get("netuno").args[0], wait_after_start)
 
 
 def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen]) -> None:
