@@ -2,7 +2,8 @@ from pathlib import Path
 
 from globals.errors import (
     InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
-    InvalidSourceDirectoryError, MissingInputDataError)
+    InvalidRestartAttributeError, InvalidSourceDirectoryError, InvalidWaitAttributeError,
+    MissingInputDataError)
 
 
 class CommandLineArgsValidator:
@@ -12,6 +13,8 @@ class CommandLineArgsValidator:
     verbose: bool
     clean: bool
     save_every: int
+    wait: float
+    restart_every: int
 
     def _validate_netuno_path(self) -> None:
         """
@@ -49,8 +52,30 @@ class CommandLineArgsValidator:
         if self.save_every <= 0:
             raise InvalidPartialSaveAttributeError(self.save_every)
 
+    def _validate_wait(self) -> None:
+        """
+        Validates the value of the wait attribute, which should not be negative.
+
+        Raises:
+            InvalidPartialSaveAttributeError: If the given value is less than 0.
+        """
+        if self.wait < 0:
+            raise InvalidWaitAttributeError(self.wait)
+
+    def _validate_restart_every_n(self) -> None:
+        """
+        Validates the value of the restart every attribute, which should be greater than 0.
+
+        Raises:
+            InvalidRestartAttributeError: If the given value is less than or equal to 0.
+        """
+        if self.restart_every <= 0:
+            raise InvalidRestartAttributeError(self.restart_every)
+
     def validate_arguments(self) -> None:
         """Executes all validation methods from the class."""
         self._validate_netuno_path()
         self._validate_precipitation_path()
         self._validate_save_every_n()
+        self._validate_wait()
+        self._validate_restart_every_n()

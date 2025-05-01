@@ -29,3 +29,15 @@ class CustomTimeoutError(Exception):
     def __init__(self, timeout: int, *args):
         message = f"Timeout of {timeout} seconds reached"
         super().__init__(message, *args)
+
+
+class InvalidWaitAttributeError(Exception):
+    def __init__(self, wait: float, *args):
+        message = f"Provided value {wait} cannot be negative"
+        super().__init__(message, *args)
+
+
+class InvalidRestartAttributeError(Exception):
+    def __init__(self, restart_every: int, *args):
+        message = f"Provided value {restart_every} is not greater than 0"
+        super().__init__(message, *args)
