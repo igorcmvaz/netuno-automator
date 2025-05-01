@@ -96,6 +96,9 @@ class NetunoAutomator:
     the `Mover` class and key presses.
     """
 
+    def __init__(self, extra_wait: float) -> None:
+        self.wait = extra_wait / 10
+
     def _select_file_in_explorer(self, file_path: Path) -> None:
         """
         Selects a file in Windows Explorer, by copying and pasting the desired path, then
@@ -106,7 +109,7 @@ class NetunoAutomator:
         """
         pyperclip.copy(file_path.resolve())
         logger.debug(f"Selecting file at '{file_path.resolve()}'")
-        time.sleep(0.2)
+        time.sleep(self.wait)
         pyautogui.keyDown("ctrl")
         pyautogui.press("v")
         pyautogui.keyUp("ctrl")
