@@ -27,8 +27,8 @@ def run_netuno(
 
     Args:
         path_to_netuno (Path): Path to the Netuno executable file.
-        wait_after_start (int): Time, in seconds, to wait after initializing Netuno before
-        returning. Defaults to `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
+        wait_after_start (int, optional): Time, in seconds, to wait after initializing
+        Netuno before returning. Defaults to `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
 
     Returns:
         subprocess.Popen: New Popen instance corresponding to the process executing Netuno.
@@ -73,7 +73,7 @@ def setup_logger(
 
 def sleep_until(function: Callable, tick: float = 0.01, timeout: float = 5) -> None:
     """
-    Sleep until a function returns True, checking it at fixed intervals, with a timeout.
+    Sleeps until a function returns True, checking it at fixed intervals, with a timeout.
 
     Args:
         function (Callable): Function to evaluate at every interval.
