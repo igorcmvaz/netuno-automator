@@ -112,7 +112,7 @@ def restart_netuno(
 
 def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen]) -> None:
     global_start_time = time.perf_counter()
-    automator = NetunoAutomator()
+    automator = NetunoAutomator(args.wait)
     exporter = CSVExporter(Path(__file__).parent)
     NETUNO_RESULTS_PATH.mkdir(exist_ok=True)
 
@@ -183,6 +183,11 @@ if __name__ == "__main__":
         "-n", "--save-every", type=int, default=10, dest="save_every",
         help="number of files to process before saving the in-memory results to a file. "
         "Must be a positive integer. Defaults to 10.")
+    parser.add_argument(
+        "-w", "--wait", type=float, default=1,
+        help="configurable wait for the selection of files in Windows Explorer. "
+        "Each unit corresponds to an extra 1/10 of a second. Must be non-negative. "
+        "Defaults to 1.")
 
     validator = CommandLineArgsValidator()
     parser.parse_args(namespace=validator)
