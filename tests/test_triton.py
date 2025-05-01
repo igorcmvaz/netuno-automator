@@ -1,13 +1,15 @@
 import logging
+import shutil
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from agents.validators import CommandLineArgsValidator
 from agents.manager import ProcessManager
+from globals.constants import NETUNO_RESULTS_PATH
 from globals.errors import CustomTimeoutError
 from tests.test_parsers import PATH_TO_SIMULATION_RESULT
-from triton import main, setup_logger, sleep_until
+from triton import main, setup_logger, sleep_until, logger
 
 MOCK_STRINGS = {
     "popen": "subprocess.Popen",
@@ -78,19 +80,23 @@ class TestHelperFunctions(unittest.TestCase):
 
 class TestMainFunction(unittest.TestCase):
 
-    def test_main_no_restart(self):
-        SAMPLE_FILE_NAME = "test-consolidated.csv"
-        SAMPLE_RESULTS_FILE = Path(__file__).parent.parent / SAMPLE_FILE_NAME
-        args = CommandLineArgsValidator()
-        args.netuno_exe_path = Path(__file__).parent / "netuno.exe"
-        args.precipitation_dir_path = Path(__file__).parent.parent / "example"
-        args.quiet = 0
-        args.verbose = True
-        args.clean = True
-        args.save_every = 2
-        args.restart_every = 15
-        args.wait = 0
+    def setUp(self):
+        self.SAMPLE_FILE_NAME = "test-consolidated.csv"
+        self.SAMPLE_RESULTS_FILE = Path(__file__).parent.parent / self.SAMPLE_FILE_NAME
+        self.args = CommandLineArgsValidator()
+        self.args.netuno_exe_path = Path(__file__).parent / "netuno.exe"
+        self.args.precipitation_dir_path = Path(__file__).parent.parent / "example"
+        self.args.quiet = 0
+        self.args.verbose = True
+        self.args.wait = 0
+        self.args.clean = False
+        self.args.save_every = 10
+        self.args.restart_every = 15
 
+    def test_main_no_restart(self):
+        self.args.save_every = 2
+        self.args.clean = True
+        self.args.restart_every = 15
         with (
                 patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
                 patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
@@ -100,26 +106,17 @@ class TestMainFunction(unittest.TestCase):
                 patch(MOCK_STRINGS["sleep_until"])):
             mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
             mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_base_file_name.return_value = SAMPLE_FILE_NAME
-            main(args, ProcessManager())
+            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
+            main(self.args, ProcessManager())
             mock_first_simulation.assert_called_once()
             mock_unlink.assert_called()
             self.assertEqual(mock_run_simulation.call_count, 4)
-        SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
 
     def test_main_with_restart(self):
-        SAMPLE_FILE_NAME = "test-consolidated.csv"
-        SAMPLE_RESULTS_FILE = Path(__file__).parent.parent / SAMPLE_FILE_NAME
-        args = CommandLineArgsValidator()
-        args.netuno_exe_path = Path(__file__).parent / "netuno.exe"
-        args.precipitation_dir_path = Path(__file__).parent.parent / "example"
-        file_count = len(list(args.precipitation_dir_path.iterdir()))
-        args.quiet = 0
-        args.verbose = True
-        args.clean = False
-        args.save_every = file_count
-        args.restart_every = file_count - 2
-        args.wait = 0
+        file_count = len(list(self.args.precipitation_dir_path.iterdir()))
+        self.args.save_every = file_count
+        self.args.clean = False
+        self.args.restart_every = file_count - 2
 
         first_process = MagicMock()
         first_process.pid = 1234
@@ -137,13 +134,59 @@ class TestMainFunction(unittest.TestCase):
             popen_mock.return_value = first_process
             mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
             mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_base_file_name.return_value = SAMPLE_FILE_NAME
-            main(args, manager)
+            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
+            main(self.args, manager)
             self.assertEqual(popen_mock.call_count, 1)
             self.assertEqual(mock_first_simulation.call_count, 2)
             self.assertEqual(mock_run_simulation.call_count, file_count - 2)
             self.assertEqual(mock_unlink.call_count, 0)
-        SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
+
+    def test_main_with_result_deletion(self):
+        shutil.rmtree(NETUNO_RESULTS_PATH, ignore_errors=True)
+        NETUNO_RESULTS_PATH.mkdir()
+        EXPECTED_LOG_MESSAGE = (
+            f"Successfully deleted Netuno results directory at "
+            f"'{NETUNO_RESULTS_PATH.resolve()}'")
+
+        with (
+                patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
+                patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
+                patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
+                patch(MOCK_STRINGS["path_unlink"]),
+                patch(MOCK_STRINGS["sleep"]),
+                patch(MOCK_STRINGS["sleep_until"]),
+                self.assertLogs(logger, level=logging.INFO) as log_context):
+            mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
+            mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
+            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
+            main(self.args, ProcessManager())
+            self.assertIn(EXPECTED_LOG_MESSAGE, log_context.output[-1])
+
+    def test_main_with_error_in_result_deletion(self):
+        NETUNO_RESULTS_PATH.mkdir(exist_ok=True, parents=True)
+        temp_file = Path(NETUNO_RESULTS_PATH, "temp.csv")
+        temp_file.touch(exist_ok=True)
+        EXPECTED_LOG_MESSAGE = (
+            "Could not delete the Netuno results directory, probably due to it not being "
+            "empty")
+
+        with (
+                patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
+                patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
+                patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
+                patch(MOCK_STRINGS["path_unlink"]),
+                patch(MOCK_STRINGS["sleep"]),
+                patch(MOCK_STRINGS["sleep_until"]),
+                self.assertLogs(logger, level=logging.WARNING) as log_context):
+            mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
+            mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
+            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
+            main(self.args, ProcessManager())
+            self.assertIn(EXPECTED_LOG_MESSAGE, log_context.output[-1])
+        temp_file.unlink()
+
+    def tearDown(self):
+        self.SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
