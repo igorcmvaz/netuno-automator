@@ -67,11 +67,12 @@ class FileNameParser:
         try:
             city, model, scenario = file_name.stem.split(".", 1)[0].split("_")
         except ValueError:
-            logger.exception(
+            logger.warning(
                 f"File name '{file_name.name}' has different format than expected, "
                 f"attempting to parse model containing '_' characters")
             city, *model, scenario = file_name.stem.split(".", 1)[0].split("_")
             model = "-".join(model)
+            logger.info(f"Successfully parsed model '{model}' from file name")
         if (match := re.search(r"\(.*\)", city)):
             city = city.replace(match.group(), "")
         return city, model, scenario
