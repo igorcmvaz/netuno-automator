@@ -91,7 +91,26 @@ def sleep_until(function: Callable, tick: float = 0.01, timeout: float = 5) -> N
         time.sleep(tick)
 
 
-def main(args: CommandLineArgsValidator):
+def restart_netuno(
+        processes: dict[str, subprocess.Popen],
+        wait_after_start: int = NETUNO_STARTUP_WAIT_TIME) -> None:
+    """
+    Restarts the Netuno process, terminating the current one and starting a new one with the
+    same executable.
+
+    Args:
+        processes (dict[str, subprocess.Popen]): Dictionary containing references to
+            processes, including the current Netuno process to be terminated.
+        wait_after_start (int, optional): Time, in seconds, to wait after initializing
+            Netuno before returning. Defaults to
+            `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
+    """
+    logger.info(f"Terminating Netuno process #{processes.get("netuno").pid}")
+    processes.get("netuno").terminate()
+    processes["netuno"] = run_netuno(processes.get("netuno").args, wait_after_start)
+
+
+def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen]) -> None:
     global_start_time = time.perf_counter()
     automator = NetunoAutomator()
     exporter = CSVExporter(Path(__file__).parent)
@@ -179,10 +198,11 @@ if __name__ == "__main__":
         logger.exception(f"Command line arguments validation failed. Details:\n{exception}")
         raise SystemExit
 
-    netuno_process = run_netuno(validator.netuno_exe_path)
+    processes: dict[str, subprocess.Popen] = {}
+    processes["netuno"] = run_netuno(validator.netuno_exe_path)
     try:
-        main(validator)
+        main(validator, processes)
     except Exception as exception:
         logger.exception(f"An error occurred during the operation. Details:\n{exception}")
     finally:
-        netuno_process.terminate()
+        processes.get("netuno").terminate()
