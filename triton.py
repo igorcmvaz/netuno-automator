@@ -132,13 +132,22 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
         logger.debug(f"Deleted results file at '{results_file.resolve()}'")
 
     iteration_start_time = time.perf_counter()
+    reconfigure = False
     for counter, input_file in enumerate(dir_generator, start=1):
         city, model, scenario = FileNameParser.get_metadata(input_file)
         logger.info(f"Processing city of '{city}', model '{model}', scenario '{scenario}'")
-        results_file = automator.run_simulation(input_file, INITIAL_DATES[scenario])
+        if reconfigure:
+            results_file = automator.run_first_simulation(
+                input_file, INITIAL_DATES[scenario], **SIMULATION_PARAMETERS)
+            reconfigure = False
+        else:
+            results_file = automator.run_simulation(input_file, INITIAL_DATES[scenario])
         sleep_until(results_file.is_file)
 
         exporter.add_results(ResultParser(results_file).to_list(city, model, scenario))
+        if counter % args.restart_every == 0:
+            restart_netuno(processes)
+            reconfigure = True
         if counter % args.save_every == 0:
             logger.info(f"Saving results to disk at iteration #{counter}")
             exporter.save_results()
@@ -188,6 +197,10 @@ if __name__ == "__main__":
         help="configurable wait for the selection of files in Windows Explorer. "
         "Each unit corresponds to an extra 1/10 of a second. Must be non-negative. "
         "Defaults to 1.")
+    parser.add_argument(
+        "-r", "--restart-every", type=int, default=15, dest="restart_every",
+        help="number of files to process before restarting the Netuno process. "
+        "Must be a positive integer. Defaults to 15.")
 
     validator = CommandLineArgsValidator()
     parser.parse_args(namespace=validator)
