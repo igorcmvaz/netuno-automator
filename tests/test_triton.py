@@ -1,14 +1,12 @@
 import logging
-import shutil
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from agents.validators import CommandLineArgsValidator
 from agents.manager import ProcessManager
-from globals.constants import NETUNO_RESULTS_PATH
 from tests.test_parsers import PATH_TO_SIMULATION_RESULT
-from triton import main, setup_logger, logger
+from triton import main, setup_logger
 
 MOCK_STRINGS = {
     "popen": "subprocess.Popen",
@@ -17,7 +15,6 @@ MOCK_STRINGS = {
     "run_simulation": "agents.automators.NetunoAutomator.run_simulation",
     "sleep_until": "agents.sleeper.Sleeper.until_true",
     "base_file_name": "agents.exporter.CSVExporter._get_base_file_name",
-    "path_unlink": "pathlib.Path.unlink",
 }
 
 
@@ -83,7 +80,6 @@ class TestMainFunction(unittest.TestCase):
                 patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
                 patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
                 patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
-                patch(MOCK_STRINGS["path_unlink"]) as mock_unlink,
                 patch(MOCK_STRINGS["sleep"]),
                 patch(MOCK_STRINGS["sleep_until"])):
             mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
@@ -91,7 +87,6 @@ class TestMainFunction(unittest.TestCase):
             mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
             main(self.args, ProcessManager())
             mock_first_simulation.assert_called_once()
-            mock_unlink.assert_called()
             self.assertEqual(mock_run_simulation.call_count, 4)
 
     def test_main_with_restart(self):
@@ -109,7 +104,6 @@ class TestMainFunction(unittest.TestCase):
                 patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
                 patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
                 patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
-                patch(MOCK_STRINGS["path_unlink"]) as mock_unlink,
                 patch(MOCK_STRINGS["popen"]) as popen_mock,
                 patch(MOCK_STRINGS["sleep"]),
                 patch(MOCK_STRINGS["sleep_until"])):
@@ -121,51 +115,6 @@ class TestMainFunction(unittest.TestCase):
             self.assertEqual(popen_mock.call_count, 1)
             self.assertEqual(mock_first_simulation.call_count, 2)
             self.assertEqual(mock_run_simulation.call_count, file_count - 2)
-            self.assertEqual(mock_unlink.call_count, 0)
-
-    def test_main_with_result_deletion(self):
-        shutil.rmtree(NETUNO_RESULTS_PATH, ignore_errors=True)
-        NETUNO_RESULTS_PATH.mkdir()
-        EXPECTED_LOG_MESSAGE = (
-            f"Successfully deleted Netuno results directory at "
-            f"'{NETUNO_RESULTS_PATH.resolve()}'")
-
-        with (
-                patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
-                patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
-                patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
-                patch(MOCK_STRINGS["path_unlink"]),
-                patch(MOCK_STRINGS["sleep"]),
-                patch(MOCK_STRINGS["sleep_until"]),
-                self.assertLogs(logger, level=logging.INFO) as log_context):
-            mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
-            main(self.args, ProcessManager())
-            self.assertIn(EXPECTED_LOG_MESSAGE, log_context.output[-1])
-
-    def test_main_with_error_in_result_deletion(self):
-        NETUNO_RESULTS_PATH.mkdir(exist_ok=True, parents=True)
-        temp_file = Path(NETUNO_RESULTS_PATH, "temp.csv")
-        temp_file.touch(exist_ok=True)
-        EXPECTED_LOG_MESSAGE = (
-            "Could not delete the Netuno results directory, probably due to it not being "
-            "empty")
-
-        with (
-                patch(MOCK_STRINGS["run_first"]) as mock_first_simulation,
-                patch(MOCK_STRINGS["run_simulation"]) as mock_run_simulation,
-                patch(MOCK_STRINGS["base_file_name"]) as mock_base_file_name,
-                patch(MOCK_STRINGS["path_unlink"]),
-                patch(MOCK_STRINGS["sleep"]),
-                patch(MOCK_STRINGS["sleep_until"]),
-                self.assertLogs(logger, level=logging.WARNING) as log_context):
-            mock_first_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_run_simulation.return_value = PATH_TO_SIMULATION_RESULT
-            mock_base_file_name.return_value = self.SAMPLE_FILE_NAME
-            main(self.args, ProcessManager())
-            self.assertIn(EXPECTED_LOG_MESSAGE, log_context.output[-1])
-        temp_file.unlink()
 
     def tearDown(self):
         self.SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
