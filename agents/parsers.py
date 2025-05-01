@@ -135,6 +135,7 @@ class ResultParser:
             dict[str, Variable]: Dictionary mapping metric names to their corresponding
             Variables.
         """
+        logger.info(f"Parsing results from file '{self.results_file.name}'")
         results = self._get_results()
         return {
             "potential_savings": Variable(
