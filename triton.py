@@ -1,5 +1,4 @@
 import logging
-import subprocess
 import time
 from argparse import ArgumentParser
 from pathlib import Path
@@ -7,36 +6,15 @@ from collections.abc import Callable
 
 from agents.automators import NetunoAutomator
 from agents.exporter import CSVExporter
+from agents.manager import ProcessManager
 from agents.parsers import FileNameParser, ResultParser
 from agents.validators import CommandLineArgsValidator
-from globals.constants import (
-    INITIAL_DATES, NETUNO_RESULTS_PATH, NETUNO_STARTUP_WAIT_TIME, SIMULATION_PARAMETERS)
+from globals.constants import INITIAL_DATES, NETUNO_RESULTS_PATH, SIMULATION_PARAMETERS
 from globals.errors import (
     CustomTimeoutError, InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
     InvalidSourceDirectoryError, MissingInputDataError)
 
 logger = logging.getLogger("triton")
-
-
-def run_netuno(
-        path_to_netuno: Path,
-        wait_after_start: int = NETUNO_STARTUP_WAIT_TIME) -> subprocess.Popen:
-    """
-    Executes the Netuno application in a new process, returning the corresponding Popen
-    object.
-
-    Args:
-        path_to_netuno (Path): Path to the Netuno executable file.
-        wait_after_start (int, optional): Time, in seconds, to wait after initializing
-        Netuno before returning. Defaults to `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
-
-    Returns:
-        subprocess.Popen: New Popen instance corresponding to the process executing Netuno.
-    """
-    new_process = subprocess.Popen(args=(path_to_netuno,))
-    logger.debug(f"Successfully spawned new process #{new_process.pid} with Netuno 4")
-    time.sleep(wait_after_start)
-    return new_process
 
 
 def setup_logger(
@@ -91,26 +69,7 @@ def sleep_until(function: Callable, tick: float = 0.01, timeout: float = 5) -> N
         time.sleep(tick)
 
 
-def restart_netuno(
-        processes: dict[str, subprocess.Popen],
-        wait_after_start: int = NETUNO_STARTUP_WAIT_TIME) -> None:
-    """
-    Restarts the Netuno process, terminating the current one and starting a new one with the
-    same executable.
-
-    Args:
-        processes (dict[str, subprocess.Popen]): Dictionary containing references to
-            processes, including the current Netuno process to be terminated.
-        wait_after_start (int, optional): Time, in seconds, to wait after initializing
-            Netuno before returning. Defaults to
-            `globals.constants.NETUNO_STARTUP_WAIT_TIME`.
-    """
-    logger.info(f"Terminating Netuno process #{processes.get("netuno").pid}")
-    processes.get("netuno").terminate()
-    processes["netuno"] = run_netuno(processes.get("netuno").args[0], wait_after_start)
-
-
-def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen]) -> None:
+def main(args: CommandLineArgsValidator, manager: ProcessManager) -> None:
     global_start_time = time.perf_counter()
     automator = NetunoAutomator(args.wait)
     exporter = CSVExporter(Path(__file__).parent)
@@ -136,7 +95,7 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
     for counter, input_file in enumerate(dir_generator, start=2):
         iteration = counter - 1
         if iteration % args.restart_every == 0:
-            restart_netuno(processes)
+            manager.restart_netuno()
             reconfigure = True
         city, model, scenario = FileNameParser.get_metadata(input_file)
         logger.info(f"Processing city of '{city}', model '{model}', scenario '{scenario}'")
@@ -228,11 +187,11 @@ if __name__ == "__main__":
         logger.exception(f"Command line arguments validation failed. Details:\n{exception}")
         raise SystemExit
 
-    processes: dict[str, subprocess.Popen] = {}
-    processes["netuno"] = run_netuno(validator.netuno_exe_path)
+    manager = ProcessManager()
+    manager.run_netuno(validator.netuno_exe_path)
     try:
-        main(validator, processes)
+        main(validator, manager)
     except Exception as exception:
         logger.exception(f"An error occurred during the operation. Details:\n{exception}")
     finally:
-        processes.get("netuno").terminate()
+        manager.current_process.terminate()
