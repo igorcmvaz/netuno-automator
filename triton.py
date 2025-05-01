@@ -2,16 +2,16 @@ import logging
 import time
 from argparse import ArgumentParser
 from pathlib import Path
-from collections.abc import Callable
 
 from agents.automators import NetunoAutomator
 from agents.exporter import CSVExporter
 from agents.manager import ProcessManager
 from agents.parsers import FileNameParser, ResultParser
+from agents.sleeper import Sleeper
 from agents.validators import CommandLineArgsValidator
 from globals.constants import INITIAL_DATES, NETUNO_RESULTS_PATH, SIMULATION_PARAMETERS
 from globals.errors import (
-    CustomTimeoutError, InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
+    InvalidNetunoExecutableError, InvalidPartialSaveAttributeError,
     InvalidSourceDirectoryError, MissingInputDataError)
 
 logger = logging.getLogger("triton")
@@ -49,26 +49,6 @@ def setup_logger(
     logger.addHandler(handler)
 
 
-def sleep_until(function: Callable, tick: float = 0.01, timeout: float = 5) -> None:
-    """
-    Sleeps until a function returns True, checking it at fixed intervals, with a timeout.
-
-    Args:
-        function (Callable): Function to evaluate at every interval.
-        tick (float, optional): Interval between checks, in seconds. Defaults to 0.01.
-        timeout (float, optional): Timeout after which an exception is thrown, in seconds.
-            Defaults to 5.
-
-    Raises:
-        CustomTimeoutError: If timeout is reached before the function returns True.
-    """
-    start_time = time.perf_counter()
-    while not function():
-        if (time.perf_counter() - start_time) >= timeout:
-            raise CustomTimeoutError(timeout)
-        time.sleep(tick)
-
-
 def main(args: CommandLineArgsValidator, manager: ProcessManager) -> None:
     global_start_time = time.perf_counter()
     automator = NetunoAutomator(args.wait)
@@ -84,7 +64,7 @@ def main(args: CommandLineArgsValidator, manager: ProcessManager) -> None:
     results_file = automator.run_first_simulation(
         first_file, INITIAL_DATES[scenario], **SIMULATION_PARAMETERS)
 
-    sleep_until(results_file.is_file)
+    Sleeper.until_true(results_file.is_file)
     exporter.add_results(ResultParser(results_file).to_list(city, model, scenario))
     if args.clean:
         results_file.unlink()
@@ -105,7 +85,7 @@ def main(args: CommandLineArgsValidator, manager: ProcessManager) -> None:
             reconfigure = False
         else:
             results_file = automator.run_simulation(input_file, INITIAL_DATES[scenario])
-        sleep_until(results_file.is_file)
+        Sleeper.until_true(results_file.is_file)
 
         exporter.add_results(ResultParser(results_file).to_list(city, model, scenario))
         if counter % args.save_every == 0:
