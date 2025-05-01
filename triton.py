@@ -166,6 +166,17 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
         f"Total iteration time: {total_iteration_time:.2f}s. "
         f"Average iteration time ({counter} entries): {total_iteration_time/counter:.2f}s")
 
+    try:
+        NETUNO_RESULTS_PATH.rmdir()
+    except OSError:
+        logger.warning(
+            "Could not delete the Netuno results directory, probably due to it not being "
+            "empty")
+    else:
+        logger.info(
+            f"Successfully deleted Netuno results directory at "
+            f"'{NETUNO_RESULTS_PATH.resolve()}'")
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
