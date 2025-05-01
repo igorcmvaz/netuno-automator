@@ -133,7 +133,11 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
 
     iteration_start_time = time.perf_counter()
     reconfigure = False
-    for counter, input_file in enumerate(dir_generator, start=1):
+    for counter, input_file in enumerate(dir_generator, start=2):
+        iteration = counter - 1
+        if iteration % args.restart_every == 0:
+            restart_netuno(processes)
+            reconfigure = True
         city, model, scenario = FileNameParser.get_metadata(input_file)
         logger.info(f"Processing city of '{city}', model '{model}', scenario '{scenario}'")
         if reconfigure:
@@ -145,11 +149,8 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
         sleep_until(results_file.is_file)
 
         exporter.add_results(ResultParser(results_file).to_list(city, model, scenario))
-        if counter % args.restart_every == 0:
-            restart_netuno(processes)
-            reconfigure = True
         if counter % args.save_every == 0:
-            logger.info(f"Saving results to disk at iteration #{counter}")
+            logger.info(f"Saving the results to disk after processing {counter} file(s)")
             exporter.save_results()
         if args.clean:
             results_file.unlink()
@@ -164,7 +165,8 @@ def main(args: CommandLineArgsValidator, processes: dict[str, subprocess.Popen])
         f"Completed all operations. "
         f"Total time: {end_time - global_start_time:.2f}s. "
         f"Total iteration time: {total_iteration_time:.2f}s. "
-        f"Average iteration time ({counter} entries): {total_iteration_time/counter:.2f}s")
+        f"Average iteration time ({iteration} entries): "
+        f"{total_iteration_time/iteration:.2f}s")
 
     try:
         NETUNO_RESULTS_PATH.rmdir()
