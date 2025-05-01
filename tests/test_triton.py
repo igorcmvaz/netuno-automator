@@ -7,22 +7,21 @@ from unittest.mock import MagicMock, patch
 from agents.validators import CommandLineArgsValidator
 from agents.manager import ProcessManager
 from globals.constants import NETUNO_RESULTS_PATH
-from globals.errors import CustomTimeoutError
 from tests.test_parsers import PATH_TO_SIMULATION_RESULT
-from triton import main, setup_logger, sleep_until, logger
+from triton import main, setup_logger, logger
 
 MOCK_STRINGS = {
     "popen": "subprocess.Popen",
     "sleep": "time.sleep",
     "run_first": "agents.automators.NetunoAutomator.run_first_simulation",
     "run_simulation": "agents.automators.NetunoAutomator.run_simulation",
-    "sleep_until": "triton.sleep_until",
+    "sleep_until": "agents.sleeper.Sleeper.until_true",
     "base_file_name": "agents.exporter.CSVExporter._get_base_file_name",
     "path_unlink": "pathlib.Path.unlink",
 }
 
 
-class TestHelperFunctions(unittest.TestCase):
+class TestLoggerSetup(unittest.TestCase):
 
     def test_setup_logger_verbose(self):
         test_logger = logging.getLogger("test_logger")
@@ -59,23 +58,6 @@ class TestHelperFunctions(unittest.TestCase):
         with self.assertLogs(test_logger, level=logging.CRITICAL) as log_context:
             test_logger.critical("Test CRITICAL")
             self.assertIn("Test CRITICAL", log_context.output[0])
-
-    def test_sleep_until_success(self):
-        mock_function = MagicMock(side_effect=[False, False, True])
-
-        with patch(MOCK_STRINGS["sleep"]) as mock_sleep:
-            sleep_until(mock_function)
-            mock_sleep.assert_called_with(0.01)
-
-        self.assertEqual(mock_function.call_count, 3)
-
-    def test_sleep_until_timeout(self):
-        mock_function = MagicMock(return_value=False)
-
-        with patch(MOCK_STRINGS["sleep"]) as mock_sleep:
-            with self.assertRaises(CustomTimeoutError):
-                sleep_until(mock_function, timeout=0.02)
-                mock_sleep.assert_called_with(0.01)
 
 
 class TestMainFunction(unittest.TestCase):
