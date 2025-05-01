@@ -174,9 +174,8 @@ if __name__ == "__main__":
         help="path to a Netuno executable file")
     parser.add_argument(
         "precipitation_dir_path", metavar="path/to/precipitation", type=Path,
-        help=(
-            "path to a directory containing the input precipitation data files, in CSV "
-            "format"))
+        help="path to a directory containing the input precipitation data files, in CSV "
+        "format")
     parser.add_argument(
         "-q", "--quiet", action="count", default=0,
         help="turn on quiet mode (cumulative), which hides log entries of levels lower "
