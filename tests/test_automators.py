@@ -80,6 +80,11 @@ class TestMover(unittest.TestCase):
             Mover.from_rainwater_replacement_to_coefficient_of_loss()
             press_mock.assert_called_once_with("tab")
 
+    def test_loss_to_upper_tank(self):
+        with patch(MOCK_PATHS["press"]) as press_mock:
+            Mover.from_coefficient_of_loss_to_upper_tank_button()
+            press_mock.assert_called_once_with("tab", 2)
+
     def test_to_lower_tank_button(self):
         EXPECTED_CALL_ARGS = (12, 31)
         with (
@@ -195,13 +200,21 @@ class TestNetunoAutomator(unittest.TestCase):
                 call(SIMULATION_PARAMETERS["catchment_area"]),
                 call(SIMULATION_PARAMETERS["daily_water_demand"]),
                 call(SIMULATION_PARAMETERS["coefficient_of_loss"]),
-                call(SIMULATION_PARAMETERS["inferior_tank_capacity"]),
+                call(SIMULATION_PARAMETERS["upper_tank_capacity"]),
+                call(SIMULATION_PARAMETERS["lower_tank_capacity"]),
                 ])
             write_mock.assert_called_once_with(
                 str(SIMULATION_PARAMETERS["number_of_residents"]))
             click_mock.assert_called_once()
-            press_mock.assert_called_once_with(
-                "down", SIMULATION_PARAMETERS["rainwater_replacement_percentage"] // 10)
+            press_mock.assert_has_calls(
+                [
+                    call(
+                        "down",
+                        SIMULATION_PARAMETERS["rainwater_replacement_percentage"] // 10),
+                    call("space"),
+                    call("up"),
+                    call("enter"),
+                ])
             mover_mock.from_initial_run_off_to_catchment_area_field.assert_called_once()
             mover_mock.from_catchment_area_to_water_demand_field.assert_called_once()
             mover_mock.from_water_demand_to_residents_field.assert_called_once()
