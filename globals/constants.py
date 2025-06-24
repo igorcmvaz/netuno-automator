@@ -33,7 +33,8 @@ SIMULATION_PARAMETERS = {
     "number_of_residents": 1,
     "rainwater_replacement_percentage": 40,
     "coefficient_of_loss": 0.8,
-    "inferior_tank_capacity": 150
+    "upper_tank_capacity": 150,
+    "lower_tank_capacity": 150,
 }
 
 SIMULATION_OUTPUT_ATTRIBUTES = {

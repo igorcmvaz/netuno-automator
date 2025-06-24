@@ -203,7 +203,8 @@ class NetunoAutomator:
             number_of_residents: int,
             rainwater_replacement_percentage: int,
             coefficient_of_loss: float,
-            inferior_tank_capacity: float) -> None:
+            upper_tank_capacity: float,
+            lower_tank_capacity: float) -> None:
         """
         Sets the parameters for the simulation, going field by field and selecting/typing
         the given values.
@@ -216,7 +217,8 @@ class NetunoAutomator:
             rainwater_replacement_percentage (int): Value for rainwater replacement
                 percentage.
             coefficient_of_loss (float): Value for coefficient of loss.
-            inferior_tank_capacity (float): Value for inferior tank capacity.
+            upper_tank_capacity (float): Value for upper tank capacity.
+            lower_tank_capacity (float): Value for lower tank capacity.
         """
         Mover.from_date_to_initial_run_off_field()
         self._type_initial_run_off(initial_run_off_disposal)
@@ -230,9 +232,11 @@ class NetunoAutomator:
         self._select_rainwater_replacement_option(rainwater_replacement_percentage)
         Mover.from_rainwater_replacement_to_coefficient_of_loss()
         self._select_coefficient_of_loss(coefficient_of_loss)
+        Mover.from_coefficient_of_loss_to_upper_tank_button()
+        self._set_upper_tank_capacity(upper_tank_capacity)
         Mover.to_lower_tank_radio_button()
         pyautogui.leftClick()
-        self._type_lower_tank_capacity(inferior_tank_capacity)
+        self._type_lower_tank_capacity(lower_tank_capacity)
 
     def _simulate_and_start_export(self) -> None:
         pyautogui.press("space")
@@ -249,7 +253,8 @@ class NetunoAutomator:
             number_of_residents: int,
             rainwater_replacement_percentage: int,
             coefficient_of_loss: float,
-            inferior_tank_capacity: float) -> Path:
+            upper_tank_capacity: float,
+            lower_tank_capacity: float) -> Path:
         """
         Configures simulation parameters and runs a simulation with the provided file.
 
@@ -263,7 +268,8 @@ class NetunoAutomator:
             rainwater_replacement_percentage (int): Value for rainwater replacement
                 percentage.
             coefficient_of_loss (float): Value for coefficient of loss.
-            inferior_tank_capacity (float): Value for inferior tank capacity.
+            upper_tank_capacity (float): Value for upper tank capacity.
+            lower_tank_capacity (float): Value for lower tank capacity.
 
         Returns:
             Path: Path to the export file containing the simulation results.
@@ -276,7 +282,8 @@ class NetunoAutomator:
             number_of_residents,
             rainwater_replacement_percentage,
             coefficient_of_loss,
-            inferior_tank_capacity)
+            upper_tank_capacity,
+            lower_tank_capacity)
         Mover.from_lower_tank_field_to_simulate_button()
         self._simulate_and_start_export()
         exported_path = self._set_export_file_path(precipitation_path)
