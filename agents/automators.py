@@ -68,6 +68,10 @@ class Mover:
         pyautogui.press("tab")
 
     @staticmethod
+    def from_coefficient_of_loss_to_upper_tank_button():
+        pyautogui.press("tab", 2)
+
+    @staticmethod
     def to_lower_tank_radio_button():
         pyautogui.moveTo(pyautogui.locateCenterOnScreen(
             PATH_TO_LOWER_TANK_RADIO_BUTTON, grayscale=True, confidence=0.9))
@@ -152,6 +156,21 @@ class NetunoAutomator:
         value = saturate(
             value, RAINFALL_SUBSTITUTION_PERCENT_MIN, RAINFALL_SUBSTITUTION_PERCENT_MAX)
         pyautogui.press("down", value // 10)
+
+    def _open_upper_tank_window(self) -> None:
+        pyautogui.press("space")
+
+    def _select_upper_tank_desired_volume_option(self) -> None:
+        pyautogui.press("up")
+
+    def _type_upper_tank_capacity(self, capacity: float) -> None:
+        self._type_float_value(capacity)
+
+    def _set_upper_tank_capacity(self, capacity: float) -> None:
+        self._open_upper_tank_window()
+        self._select_upper_tank_desired_volume_option()
+        self._type_upper_tank_capacity(capacity)
+        pyautogui.press("enter")
 
     def _set_export_file_path(self, original_file_path: Path) -> Path:
         """
