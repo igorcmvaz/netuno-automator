@@ -113,8 +113,9 @@ class TestMover(unittest.TestCase):
 
 class TestNetunoAutomator(unittest.TestCase):
 
-    def setUp(self):
-        self.automator = NetunoAutomator(0)
+    @classmethod
+    def setUpClass(cls):
+        cls.automator = NetunoAutomator(0)
 
     def test_select_file(self):
         path = Path()

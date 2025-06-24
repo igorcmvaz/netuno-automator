@@ -15,10 +15,11 @@ class TestCommandLineArgsValidator(unittest.TestCase):
     PRECIPITATION_PATH = Path(BASE_PATH, "precipitation")
     CSV_PATH = Path(PRECIPITATION_PATH, "test.csv")
 
-    def setUp(self):
-        self.validator = CommandLineArgsValidator()
-        self.validator.netuno_exe_path = self.NETUNO_PATH
-        self.validator.precipitation_dir_path = self.PRECIPITATION_PATH
+    @classmethod
+    def setUpClass(cls):
+        cls.validator = CommandLineArgsValidator()
+        cls.validator.netuno_exe_path = cls.NETUNO_PATH
+        cls.validator.precipitation_dir_path = cls.PRECIPITATION_PATH
 
     def test_validate_netuno_path_success(self):
         self.NETUNO_PATH.touch(exist_ok=True)

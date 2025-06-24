@@ -59,18 +59,19 @@ class TestLoggerSetup(unittest.TestCase):
 
 class TestMainFunction(unittest.TestCase):
 
-    def setUp(self):
-        self.SAMPLE_FILE_NAME = "test-consolidated.csv"
-        self.SAMPLE_RESULTS_FILE = Path(__file__).parent.parent / self.SAMPLE_FILE_NAME
-        self.args = CommandLineArgsValidator()
-        self.args.netuno_exe_path = Path(__file__).parent / "netuno.exe"
-        self.args.precipitation_dir_path = Path(__file__).parent.parent / "example"
-        self.args.quiet = 0
-        self.args.verbose = True
-        self.args.wait = 0
-        self.args.clean = False
-        self.args.save_every = 10
-        self.args.restart_every = 15
+    @classmethod
+    def setUpClass(cls):
+        cls.SAMPLE_FILE_NAME = "test-consolidated.csv"
+        cls.SAMPLE_RESULTS_FILE = Path(__file__).parent.parent / cls.SAMPLE_FILE_NAME
+        cls.args = CommandLineArgsValidator()
+        cls.args.netuno_exe_path = Path(__file__).parent / "netuno.exe"
+        cls.args.precipitation_dir_path = Path(__file__).parent.parent / "example"
+        cls.args.quiet = 0
+        cls.args.verbose = True
+        cls.args.wait = 0
+        cls.args.clean = False
+        cls.args.save_every = 10
+        cls.args.restart_every = 15
 
     def test_main_no_restart(self):
         self.args.save_every = 2
@@ -116,8 +117,9 @@ class TestMainFunction(unittest.TestCase):
             self.assertEqual(mock_first_simulation.call_count, 2)
             self.assertEqual(mock_run_simulation.call_count, file_count - 2)
 
-    def tearDown(self):
-        self.SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
+    @classmethod
+    def tearDownClass(cls):
+        cls.SAMPLE_RESULTS_FILE.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

@@ -112,8 +112,9 @@ class TestFileNameParser(unittest.TestCase):
 
 class TestResultsParser(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = ResultParser(PATH_TO_SIMULATION_RESULT)
+    @classmethod
+    def setUpClass(cls):
+        cls.parser = ResultParser(PATH_TO_SIMULATION_RESULT)
 
     def test_float_from_string(self):
         TEST_SAMPLES = [
